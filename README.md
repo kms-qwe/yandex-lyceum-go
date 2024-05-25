@@ -97,13 +97,92 @@ docker compose down
 
 - Valid cases
     1. 4 + (-2) + 5 * 6
+    ```commandline
+    curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{
+      "id": 1,
+      "expression": "4 + (-2) + 5 * 6"
+    }'
+    ```
     2. 2 + 2 + 2 + 2
+    ```commandline
+    curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{
+      "id": 2,
+      "expression": "(2 + 2) + (2 + 2) + (2 + 2)"
+    }'
+    ```
     3. 2 + 2 * 4 + 3 - 4 + 5
+    ```commandline
+    curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{
+      "id": 3,
+      "expression": "2 + 2 * 4 + 3 - 4 + 5"
+    }'
+    ```
     4. (23 + 125) - 567 * 23
+    ```commandline
+    curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{
+      "id": 4,
+      "expression": "(23 + 125) - 567 * 23"
+    }'
+    ```
     5. -3 +6
+    ```commandline
+    curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{
+      "id": 5,
+      "expression": "-3 +6"
+    }'
+    ```
 - Invalid cases
     1. 4 / 0
+    ```commandline
+    curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{
+      "id": 6,
+      "expression": "4 / 0"
+    }'
+    ```
     2. 45 + x - 5
+    ```commandline
+    curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{
+      "id": 7,
+      "expression": "45 + x - 5"
+    }'
+    ```
     3. 45 + 4*
+    ```commandline
+    curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{
+      "id": 8,
+      "expression": "45 + 4*"
+    }'
+    ```
     4. ---4 + 5
+    ```commandline
+    curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{
+      "id": 9,
+      "expression": "---4 + 5"
+    }'
+    ```
     5. 52 * 3 /
+    ```commandline
+    curl --location 'localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{
+      "id": 10,
+      "expression": "52 * 3 /"
+    }'
+    ```
+
+```commandline
+curl --location 'localhost:8080/api/v1/expressions'
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
