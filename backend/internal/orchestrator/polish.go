@@ -23,7 +23,67 @@ func precedence(op rune) int {
 	return -1
 }
 
+func isValidExpression(expression string) bool {
+	if len(expression) == 0 {
+		return false
+	}
+
+	// Стек для отслеживания скобок
+	var stack []rune
+	lastChar := ' ' // Переменная для хранения предыдущего символа
+
+	for i, char := range expression {
+		switch {
+		case unicode.IsDigit(char):
+			// Если символ - цифра, продолжаем
+			lastChar = char
+
+		case char == '+', char == '-', char == '*', char == '/':
+			// Проверяем, является ли текущий символ унарным минусом или плюсом
+			if char == '+' || char == '-' {
+				if i == 0 || expression[i-1] == '(' || expression[i-1] == '+' || expression[i-1] == '-' || expression[i-1] == '*' || expression[i-1] == '/' {
+					lastChar = char
+					continue
+				}
+			}
+
+			// Если символ - оператор, предыдущий символ не должен быть оператором или открывающей скобкой
+			if lastChar == ' ' || lastChar == '+' || lastChar == '-' || lastChar == '*' || lastChar == '/' || lastChar == '(' {
+				return false
+			}
+			lastChar = char
+
+		case char == '(':
+			// Если символ - открывающая скобка, добавляем её в стек
+			stack = append(stack, char)
+			lastChar = char
+
+		case char == ')':
+			// Если символ - закрывающая скобка, проверяем, есть ли соответствующая открывающая скобка в стеке
+			if len(stack) == 0 || stack[len(stack)-1] != '(' {
+				return false
+			}
+			stack = stack[:len(stack)-1]
+			lastChar = char
+
+		case char == ' ':
+			// Пропускаем пробелы
+			continue
+
+		default:
+			// Если символ не является допустимым, возвращаем false
+			return false
+		}
+	}
+
+	// Проверяем, что стек пуст (все скобки закрыты) и последний символ не оператор
+	return len(stack) == 0 && lastChar != '+' && lastChar != '-' && lastChar != '*' && lastChar != '/'
+}
+
 func infixToPostfix(infix string) (string, error) {
+	if !isValidExpression(infix) {
+		return "", errors.New("invalid string")
+	}
 	var postfix strings.Builder
 	stack := list.New()
 	var num strings.Builder
@@ -37,6 +97,7 @@ func infixToPostfix(infix string) (string, error) {
 			isUnary = false
 		} else if isOperator(char) {
 			if char == '/' {
+				// Check for division by zero
 				nextNonSpaceIdx := i + 1
 				for nextNonSpaceIdx < len(infix) && unicode.IsSpace(rune(infix[nextNonSpaceIdx])) {
 					nextNonSpaceIdx++
