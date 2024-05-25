@@ -1,7 +1,7 @@
 package orchestrator
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -65,7 +65,7 @@ type orchestrator struct {
 }
 
 func init() {
-	fmt.Println("Init function in orchestrator package is called.")
+	log.Println("Оркестратор начал работу")
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v1/calculate", handlerNewExp)
 	mux.HandleFunc("/api/v1/expressions", handlerListExpr)

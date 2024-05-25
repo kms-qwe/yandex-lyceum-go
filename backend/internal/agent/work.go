@@ -1,9 +1,10 @@
+// воркер получает задачу из канал агента вычисляет значение и отправляет на сервер
 package agent
 
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -27,7 +28,7 @@ func work() {
 		time.Sleep(aR.Task.TimeOp)
 		jsonData, err := json.MarshalIndent(ans, "", "    ")
 		if err != nil {
-			fmt.Println("Error creating request:", err)
+			log.Println("Error creating request:", err)
 			continue
 		}
 
@@ -35,7 +36,7 @@ func work() {
 
 		req, err := http.NewRequest("POST", "http://localhost:8080/internal/task", bytes.NewBuffer(jsonData))
 		if err != nil {
-			fmt.Println("Error creating request:", err)
+			log.Println("Воркер отправил запрос, ошибка:", err)
 			continue
 		}
 
@@ -43,11 +44,11 @@ func work() {
 
 		resp, err := client.Do(req)
 		if err != nil {
-			fmt.Println("Error sending request:", err)
+			log.Println("Воркер отправил результат, ошибка:", err)
 			continue
 		}
 		statusCode := resp.StatusCode
-		fmt.Println("Response status code:", statusCode)
+		log.Println("Воркер отправил результат, код:", statusCode)
 		resp.Body.Close()
 
 	}

@@ -1,15 +1,19 @@
+// eval запускается для каждого полученного выражения в отдельной горутине и высчитывает результат
 package orchestrator
 
 import (
-	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func eval(expr string, rId ID) {
+func eval(initExpr string, rId ID) {
+	expr := initExpr
 	for {
-		fmt.Println("НОВОЕ ВЫРАЖЕНИЕ EVAL", expr)
+		log.Printf("Индекс выражения: %d; Начальное выражение: |%s|; Выражение сейчас: |%s|\n", rId, initExpr, expr)
+
+		//Считаем части, которые можно выполнить параллельно
 		elementsOfExpr := strings.Fields(expr)
 		numOp := 0
 		for i := range len(elementsOfExpr) - 2 {
@@ -18,14 +22,17 @@ func eval(expr string, rId ID) {
 			}
 		}
 
+		// если частей, которые нужно посчитать нет, то выражение готово
 		if numOp == 0 {
 			orch.mu.Lock()
 			r, err := strconv.ParseFloat(elementsOfExpr[0], 64)
 			dbR := dbRecord{}
 			if err != nil {
 				dbR.status = "Ошибка при переводе в число в evalPolish"
+				log.Println("Ошика при переводе в число в evalPolish с индексом", rId)
 			} else {
 				dbR.status = "Ответ готов"
+				log.Println("Ответ готов для индекса", rId)
 			}
 			dbR.result = r
 			orch.db[rId] = dbR
@@ -33,6 +40,7 @@ func eval(expr string, rId ID) {
 			break
 		}
 
+		// Все части отправляем в канал, который отдает выражения агенту, делается в отдельной горутине, чтобы не блокировать получение
 		go func() {
 			cnt := 0
 			for i := range len(elementsOfExpr) - 2 {
@@ -53,17 +61,17 @@ func eval(expr string, rId ID) {
 					aR.Task.Arg2, _ = strconv.ParseFloat(elementsOfExpr[i+1], 64)
 					aR.Task.Operation = elementsOfExpr[i+2]
 					aR.Task.Id = agentID{rId, ID(cnt)}
-					fmt.Println(aR)
+					log.Println("Отправлено на вычисление", aR)
 					orch.chToAgent <- aR
 				}
 
 			}
 		}()
+
+		//Получаем результаты из dbOp, полученные результаты удаляем из таблицы, чтобы в следующей итерации evalPolish не дублировались индексы
 		resEval := map[agentID]float64{}
 		for len(resEval) < numOp {
 			orch.muOp.Lock()
-			fmt.Println(orch.dbOp)
-			fmt.Println(len(resEval), numOp, resEval)
 			for i := range numOp {
 				aID := agentID{rId, ID(i + 1)}
 				if _, ok := resEval[aID]; !ok {
@@ -76,6 +84,7 @@ func eval(expr string, rId ID) {
 			orch.muOp.Unlock()
 			time.Sleep(1 * time.Second)
 		}
+		//Заменяем части на их значения и изменяем текущее выражение
 		cnt := 0
 		for i := range len(elementsOfExpr) - 2 {
 			if isNumber(elementsOfExpr[i]) && isNumber(elementsOfExpr[i+1]) && isOperator([]rune(elementsOfExpr[i+2])[0]) {

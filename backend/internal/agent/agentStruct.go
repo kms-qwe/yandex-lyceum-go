@@ -1,3 +1,4 @@
+// структура агента и запуск в init, чтобы при импорте в main сразу запускался агент
 package agent
 
 import (
@@ -8,13 +9,11 @@ var (
 	COMPUTING_POWER int   = 3
 	ag              agent = agent{
 		workCh: make(chan agReq),
-		ansCh:  make(chan agAns),
 	}
 )
 
 type agent struct {
 	workCh chan agReq
-	ansCh  chan agAns
 }
 
 type agAns struct {
